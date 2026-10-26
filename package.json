@@ -10,13 +10,14 @@
     "./icon": "./icon.svg"
   },
   "files": [
-    "index.js",
+    "LICENSE",
+    "README.md",
+    "assets/icon-180.png",
     "client.js",
     "cordis.patch.yml",
-    "locale/*.json",
     "icon.svg",
-    "README.md",
-    "LICENSE"
+    "index.js",
+    "locale/*.json"
   ],
   "dsh": {
     "bundle": {
