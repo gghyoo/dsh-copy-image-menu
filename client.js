@@ -351,11 +351,24 @@ window.__ModuleLoader__.load({
       return canvasToBlob(canvas);
     }
 
+    function overflowRight(root) {
+      const base = root.getBoundingClientRect();
+      let right = base.width;
+      for (const element of root.querySelectorAll('*')) {
+        const rect = element.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) continue;
+        const edge = Math.max(rect.right - base.left, rect.left - base.left + element.scrollWidth);
+        if (edge > right) right = edge;
+      }
+      return right;
+    }
+
     async function renderMessagePng(tail) {
       const target = findAssistantStep(tail);
       if (target === null) throw new Error('assistant step not found');
+      const MAX_CONTENT_WIDTH = 2000;
       const measuredWidth = Math.round(target.getBoundingClientRect().width);
-      const contentWidth = measuredWidth >= 280 ? Math.min(920, measuredWidth) : 760;
+      let contentWidth = measuredWidth >= 280 ? Math.min(MAX_CONTENT_WIDTH, measuredWidth) : 760;
       const clone = target.cloneNode(true);
       copyComputedTree(target, clone);
       clone.style.setProperty('width', `${contentWidth}px`);
@@ -390,6 +403,13 @@ window.__ModuleLoader__.load({
 
       try {
         try {
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          const overflow = overflowRight(clone);
+          if (overflow <= contentWidth + 1 || contentWidth >= MAX_CONTENT_WIDTH) break;
+          contentWidth = Math.min(MAX_CONTENT_WIDTH, Math.ceil(overflow) + 12);
+          clone.style.setProperty('width', `${contentWidth}px`);
+          wrapper.style.setProperty('width', `${contentWidth + padding * 2 + 2}px`);
+        }
         const width = Math.ceil(wrapper.getBoundingClientRect().width);
         const height = Math.ceil(Math.max(wrapper.scrollHeight, wrapper.getBoundingClientRect().height));
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
