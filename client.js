@@ -408,6 +408,10 @@ window.__ModuleLoader__.load({
 
           const onClick = async () => {
             if (state === 'rendering') return;
+            if (timerRef.current !== null) {
+              window.clearTimeout(timerRef.current);
+              timerRef.current = null;
+            }
             setState('rendering');
             try {
               const tail = buttonRef.current?.closest('[data-turn-tail]') ?? null;
