@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "复制与下载菜单",
-    "description": "点击助手消息的复制按钮，选择复制 Markdown 或下载 PNG 图片。"
+    "title": "下载图片按钮",
+    "description": "在助手消息的复制按钮旁增加一个下载 PNG 按钮。"
   }
 }

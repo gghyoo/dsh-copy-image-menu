@@ -1,7 +1,7 @@
 {
   "name": "@local/dsh-copy-image-menu",
   "version": "1.0.0",
-  "description": "Click an assistant copy button to copy Markdown or download a PNG image.",
+  "description": "Adds a Download PNG button next to the assistant message copy button.",
   "type": "module",
   "exports": {
     ".": "./index.js",

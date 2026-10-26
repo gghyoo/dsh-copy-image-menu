@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Copy and Download Menu",
-    "description": "Click an assistant copy button to choose Markdown copy or PNG download."
+    "title": "Download PNG Button",
+    "description": "Adds a Download PNG button next to the assistant message copy button."
   }
 }

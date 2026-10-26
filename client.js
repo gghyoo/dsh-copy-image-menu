@@ -4,181 +4,96 @@ window.__ModuleLoader__.load({
     const React = require('react');
     const h = React.createElement;
     const NS = 'copy-image-menu';
-    const MENU_WIDTH = 180;
 
     const zh = {
-      menuLabel: '复制或下载',
-      copyMarkdown: '复制 Markdown',
-      copyMarkdownHint: '保留原始文本格式',
-      downloadPng: '下载 PNG',
-      downloadPngHint: '保存为图片文件',
+      downloadImage: '下载 PNG',
       rendering: '正在生成图片…',
-      imageDownloaded: '已开始下载 PNG',
-      imageFailed: '生成图片失败，请重试',
-      noMessage: '没有找到可复制的消息',
+      downloadStarted: '已开始下载 PNG',
+      downloadFailed: '生成图片失败，请重试',
     };
 
     const en = {
-      menuLabel: 'Copy or download',
-      copyMarkdown: 'Copy Markdown',
-      copyMarkdownHint: 'Keep the original text',
-      downloadPng: 'Download PNG',
-      downloadPngHint: 'Save the image as a file',
+      downloadImage: 'Download PNG',
       rendering: 'Rendering image…',
-      imageDownloaded: 'PNG download started',
-      imageFailed: 'Could not render the image',
-      noMessage: 'No message content found',
+      downloadStarted: 'PNG download started',
+      downloadFailed: 'Could not render the image',
     };
 
     const CSS = `
-      .cim-menu {
-        position: fixed;
-        z-index: 10000;
-        box-sizing: border-box;
-        padding: 6px;
-        border: 1px solid var(--dsw-alias-border-l1, rgba(127, 127, 127, .28));
-        border-radius: 10px;
-        background: var(--dsw-alias-bg-overlay, #202020);
-        box-shadow: 0 14px 38px rgba(0, 0, 0, .24);
-        color: var(--dsw-alias-label-primary, #f5f5f5);
-        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-        pointer-events: auto;
-      }
-      .cim-menu__item {
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        width: 100%;
-        padding: 8px 10px;
-        border: 0;
-        border-radius: 7px;
-        background: transparent;
-        color: inherit;
-        font: inherit;
-        text-align: left;
+      .cim-download {
+        width: calc(28px + var(--dsh-content-font-delta, 0px));
+        height: calc(28px + var(--dsh-content-font-delta, 0px));
+        border-radius: var(--dsw-radius-sm);
+        color: var(--dsw-alias-label-tertiary);
         cursor: pointer;
-      }
-      .cim-menu__item:hover,
-      .cim-menu__item:focus-visible {
-        background: var(--dsw-alias-interactive-bg-hover, rgba(127, 127, 127, .16));
-        outline: none;
-      }
-      .cim-menu__icon {
-        display: flex;
-        flex: 0 0 16px;
-        align-items: center;
+        background: 0 0;
+        border: none;
         justify-content: center;
+        align-items: center;
+        padding: 6px;
+        display: inline-flex;
+      }
+      .cim-download svg {
+        width: calc(17px + var(--dsh-content-font-delta, 0px));
+        height: calc(17px + var(--dsh-content-font-delta, 0px));
+      }
+      .cim-download:hover {
+        background: var(--dsw-alias-interactive-bg-hover);
+        color: var(--dsw-alias-label-secondary);
+      }
+      .cim-download:focus-visible {
+        outline: 1px solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
+        outline-offset: 1px;
+      }
+      .cim-download:disabled {
+        cursor: default;
+        opacity: .7;
+      }
+      .cim-download[data-state="done"] { color: var(--dsw-alias-state-success-primary); }
+      .cim-download[data-state="error"] { color: var(--dsw-alias-state-error-primary); }
+      .cim-spinner {
         width: 16px;
         height: 16px;
-        color: var(--dsw-alias-label-secondary, #a8a8a8);
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: cim-spin .8s linear infinite;
       }
-      .cim-menu__text {
-        display: flex;
-        flex-direction: column;
-        gap: 1px;
-        min-width: 0;
+      @keyframes cim-spin {
+        to { transform: rotate(360deg); }
       }
-      .cim-menu__title {
-        font-size: 13px;
-        line-height: 18px;
-        white-space: nowrap;
+      @media (prefers-reduced-motion: reduce) {
+        .cim-spinner { animation-duration: 2.4s; }
       }
-      .cim-menu__hint {
-        font-size: 11px;
-        line-height: 15px;
-        color: var(--dsw-alias-label-secondary, #a0a0a0);
-        white-space: nowrap;
-      }
-      .cim-toast {
-        position: fixed;
-        left: 50%;
-        bottom: 30px;
-        z-index: 10003;
-        box-sizing: border-box;
-        max-width: min(86vw, 520px);
-        padding: 8px 14px;
-        border: 1px solid var(--dsw-alias-border-l1, rgba(127, 127, 127, .28));
-        border-radius: 999px;
-        background: var(--dsw-alias-bg-overlay, #202020);
-        box-shadow: 0 10px 28px rgba(0, 0, 0, .22);
-        color: var(--dsw-alias-label-primary, #f5f5f5);
-        font: 12px/18px system-ui, -apple-system, "Segoe UI", sans-serif;
-        text-align: center;
-        transform: translateX(-50%);
-        pointer-events: none;
-        white-space: nowrap;
-      }
-      .cim-toast[data-tone="success"] { color: var(--dsw-alias-state-success-primary, #34d399); }
-      .cim-toast[data-tone="error"] { color: var(--dsw-alias-state-error-primary, #f87171); }
     `;
 
     const ICONS = {
-      markdown: () => h('svg', {
-        viewBox: '0 0 24 24', width: 16, height: 16, fill: 'none',
-        stroke: 'currentColor', strokeWidth: 1.7,
-        strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true,
-      },
-      h('path', { d: 'M5 3h9l5 5v13H5z' }),
-      h('path', { d: 'M14 3v5h5' }),
-      h('path', { d: 'M8 12h8M8 16h6' })),
       download: () => h('svg', {
-        viewBox: '0 0 24 24', width: 16, height: 16, fill: 'none',
+        viewBox: '0 0 24 24', fill: 'none',
         stroke: 'currentColor', strokeWidth: 1.7,
         strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true,
       },
       h('path', { d: 'M12 3v11' }),
       h('path', { d: 'm8 10 4 4 4-4' }),
       h('path', { d: 'M5 20h14' })),
-    };
-
-    function MenuItem({ icon, title, hint, onClick }) {
-      return h('button', {
-        type: 'button',
-        className: 'cim-menu__item',
-        role: 'menuitem',
-        onClick,
+      check: () => h('svg', {
+        viewBox: '0 0 24 24', fill: 'none',
+        stroke: 'currentColor', strokeWidth: 2,
+        strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true,
       },
-      h('span', { className: 'cim-menu__icon' }, icon()),
-      h('span', { className: 'cim-menu__text' },
-        h('span', { className: 'cim-menu__title' }, title),
-        h('span', { className: 'cim-menu__hint' }, hint)));
-    }
-
-    function createStore() {
-      let state = {
-        open: false,
-        left: 8,
-        top: 8,
-        button: null,
-        toast: null,
-      };
-      const listeners = new Set();
-      return {
-        get() { return state; },
-        set(patch) {
-          state = { ...state, ...patch };
-          for (const listener of [...listeners]) listener();
-        },
-        subscribe(listener) {
-          listeners.add(listener);
-          return () => { listeners.delete(listener); };
-        },
-      };
-    }
+      h('path', { d: 'm5 12 4 4L20 6' })),
+      alert: () => h('svg', {
+        viewBox: '0 0 24 24', fill: 'none',
+        stroke: 'currentColor', strokeWidth: 1.7,
+        strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true,
+      },
+      h('path', { d: 'M12 3 2 21h20L12 3Z' }),
+      h('path', { d: 'M12 9v5M12 17h.01' })),
+    };
 
     function token(name, fallback) {
       const value = getComputedStyle(document.body).getPropertyValue(name).trim();
       return value || fallback;
-    }
-
-    function isCopyButton(target) {
-      if (!(target instanceof Element)) return null;
-      const button = target.closest('button');
-      if (!(button instanceof HTMLButtonElement)) return null;
-      const row = button.closest('[data-turn-tail] [data-clock="end"]');
-      if (row === null) return null;
-      return row.querySelector('button') === button ? button : null;
     }
 
     function findAssistantStep(tail) {
@@ -403,42 +318,42 @@ window.__ModuleLoader__.load({
 
       try {
         try {
-        for (let attempt = 0; attempt < 3; attempt += 1) {
-          const overflow = overflowRight(clone);
-          if (overflow <= contentWidth + 1 || contentWidth >= MAX_CONTENT_WIDTH) break;
-          contentWidth = Math.min(MAX_CONTENT_WIDTH, Math.ceil(overflow) + 12);
-          clone.style.setProperty('width', `${contentWidth}px`);
-          wrapper.style.setProperty('width', `${contentWidth + padding * 2 + 2}px`);
-        }
-        const width = Math.ceil(wrapper.getBoundingClientRect().width);
-        const height = Math.ceil(Math.max(wrapper.scrollHeight, wrapper.getBoundingClientRect().height));
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        svg.setAttribute('width', String(width));
-        svg.setAttribute('height', String(height));
-        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-        const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-        foreignObject.setAttribute('x', '0');
-        foreignObject.setAttribute('y', '0');
-        foreignObject.setAttribute('width', String(width));
-        foreignObject.setAttribute('height', String(height));
-        foreignObject.appendChild(wrapper);
-        svg.appendChild(foreignObject);
+          for (let attempt = 0; attempt < 3; attempt += 1) {
+            const overflow = overflowRight(clone);
+            if (overflow <= contentWidth + 1 || contentWidth >= MAX_CONTENT_WIDTH) break;
+            contentWidth = Math.min(MAX_CONTENT_WIDTH, Math.ceil(overflow) + 12);
+            clone.style.setProperty('width', `${contentWidth}px`);
+            wrapper.style.setProperty('width', `${contentWidth + padding * 2 + 2}px`);
+          }
+          const width = Math.ceil(wrapper.getBoundingClientRect().width);
+          const height = Math.ceil(Math.max(wrapper.scrollHeight, wrapper.getBoundingClientRect().height));
+          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          svg.setAttribute('width', String(width));
+          svg.setAttribute('height', String(height));
+          svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+          const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+          foreignObject.setAttribute('x', '0');
+          foreignObject.setAttribute('y', '0');
+          foreignObject.setAttribute('width', String(width));
+          foreignObject.setAttribute('height', String(height));
+          foreignObject.appendChild(wrapper);
+          svg.appendChild(foreignObject);
 
-        const svgText = new XMLSerializer().serializeToString(svg);
-        const imageUrl = `data:image/svg+xml;base64,${textToBase64(svgText)}`;
-        const image = await loadSvgImage(imageUrl);
-        const scale = Math.max(0.5, Math.min(2, 16000 / height, 12000 / width));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(width * scale));
-        canvas.height = Math.max(1, Math.round(height * scale));
-        const context = canvas.getContext('2d');
-        if (context === null) throw new Error('canvas context unavailable');
-        context.imageSmoothingEnabled = true;
-        context.imageSmoothingQuality = 'high';
-        context.scale(scale, scale);
-        context.drawImage(image, 0, 0, width, height);
-        return await canvasToBlob(canvas);
+          const svgText = new XMLSerializer().serializeToString(svg);
+          const imageUrl = `data:image/svg+xml;base64,${textToBase64(svgText)}`;
+          const image = await loadSvgImage(imageUrl);
+          const scale = Math.max(0.5, Math.min(2, 16000 / height, 12000 / width));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(width * scale));
+          canvas.height = Math.max(1, Math.round(height * scale));
+          const context = canvas.getContext('2d');
+          if (context === null) throw new Error('canvas context unavailable');
+          context.imageSmoothingEnabled = true;
+          context.imageSmoothingQuality = 'high';
+          context.scale(scale, scale);
+          context.drawImage(image, 0, 0, width, height);
+          return await canvasToBlob(canvas);
         } catch (error) {
           console.warn('copy-image-menu: styled render failed, using text fallback', error);
           return await renderPlainTextPng(target);
@@ -464,160 +379,83 @@ window.__ModuleLoader__.load({
       inject: ['slots', 'locale'],
       apply(ctx) {
         ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'copy-image-menu: dictionaries');
-        const translate = ctx.locale.bind(NS);
-        const store = createStore();
-        let bypassButton = null;
-        let toastTimer = null;
-
-        const showToast = (text, tone = 'info', duration = 1800) => {
-          if (toastTimer !== null) window.clearTimeout(toastTimer);
-          toastTimer = null;
-          store.set({ toast: { text, tone } });
-          if (duration > 0) {
-            toastTimer = window.setTimeout(() => {
-              toastTimer = null;
-              store.set({ toast: null });
-            }, duration);
-          }
-        };
-
-        const closeMenu = () => store.set({ open: false });
-
-        const openMenu = (button) => {
-          const rect = button.getBoundingClientRect();
-          const estimatedHeight = 104;
-          const left = Math.min(
-            Math.max(8, rect.right - MENU_WIDTH),
-            Math.max(8, window.innerWidth - MENU_WIDTH - 8),
-          );
-          let top = rect.bottom + 7;
-          if (top + estimatedHeight > window.innerHeight - 8) {
-            top = Math.max(8, rect.top - estimatedHeight - 7);
-          }
-          store.set({ open: true, left, top, button });
-        };
-
-        const copyMarkdown = () => {
-          const button = store.get().button;
-          closeMenu();
-          if (!(button instanceof HTMLButtonElement) || !button.isConnected) {
-            showToast(translate('noMessage'), 'error');
-            return;
-          }
-          bypassButton = button;
-          button.click();
-          window.setTimeout(() => {
-            if (bypassButton === button) bypassButton = null;
-          }, 1000);
-        };
-
-        const downloadImage = async () => {
-          const button = store.get().button;
-          closeMenu();
-          if (!(button instanceof HTMLButtonElement) || !button.isConnected) {
-            showToast(translate('noMessage'), 'error');
-            return;
-          }
-          const tail = button.closest('[data-turn-tail]');
-          showToast(translate('rendering'), 'info', 0);
-          try {
-            const blob = await renderMessagePng(tail);
-            downloadBlob(blob);
-            showToast(translate('imageDownloaded'), 'info', 1800);
-          } catch (error) {
-            console.error('copy-image-menu: download render failed', error);
-            showToast(translate('imageFailed'), 'error', 2600);
-          }
-        };
-
-        const onDocumentClick = (event) => {
-          const button = isCopyButton(event.target);
-          if (button === null) return;
-          if (bypassButton === button) {
-            bypassButton = null;
-            return;
-          }
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          openMenu(button);
-        };
-
         ctx.effect(() => {
-          document.addEventListener('click', onDocumentClick, true);
-          return () => document.removeEventListener('click', onDocumentClick, true);
-        }, 'copy-image-menu: click interception');
+          const style = document.createElement('style');
+          style.dataset.plugin = '@local/dsh-copy-image-menu';
+          style.textContent = CSS;
+          document.head.appendChild(style);
+          return () => style.remove();
+        }, 'copy-image-menu: styles');
+        const translate = ctx.locale.bind(NS);
 
-        ctx.effect(() => () => {
-          if (toastTimer !== null) window.clearTimeout(toastTimer);
-          toastTimer = null;
-        }, 'copy-image-menu: toast timer');
-
-        function CopyOverlay(props) {
+        function DownloadAction(props) {
           const t = props.t ?? translate;
-          const state = React.useSyncExternalStore(store.subscribe, store.get, store.get);
-          const menuRef = React.useRef(null);
+          const [state, setState] = React.useState('idle');
+          const buttonRef = React.useRef(null);
+          const timerRef = React.useRef(null);
 
-          React.useEffect(() => {
-            if (!state.open) return undefined;
-            const onPointerDown = (event) => {
-              if (menuRef.current !== null && !menuRef.current.contains(event.target)) closeMenu();
-            };
-            const onKeyDown = (event) => {
-              if (event.key !== 'Escape') return;
-              const button = store.get().button;
-              closeMenu();
-              if (button instanceof HTMLButtonElement) button.focus();
-            };
-            const onViewportChange = () => closeMenu();
-            document.addEventListener('pointerdown', onPointerDown, true);
-            document.addEventListener('keydown', onKeyDown, true);
-            window.addEventListener('scroll', onViewportChange, true);
-            window.addEventListener('resize', onViewportChange);
-            const first = menuRef.current?.querySelector('button');
-            if (first instanceof HTMLElement) first.focus({ preventScroll: true });
-            return () => {
-              document.removeEventListener('pointerdown', onPointerDown, true);
-              document.removeEventListener('keydown', onKeyDown, true);
-              window.removeEventListener('scroll', onViewportChange, true);
-              window.removeEventListener('resize', onViewportChange);
-            };
-          }, [state.open]);
+          React.useEffect(() => () => {
+            if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+          }, []);
 
-          return h(React.Fragment, null,
-            h('style', null, CSS),
-            state.open ? h('div', {
-              ref: menuRef,
-              className: 'cim-menu',
-              role: 'menu',
-              'aria-label': t('menuLabel'),
-              style: { left: `${state.left}px`, top: `${state.top}px`, width: `${MENU_WIDTH}px` },
-            },
-            h(MenuItem, {
-              icon: ICONS.markdown,
-              title: t('copyMarkdown'),
-              hint: t('copyMarkdownHint'),
-              onClick: copyMarkdown,
-            }),
-            h(MenuItem, {
-              icon: ICONS.download,
-              title: t('downloadPng'),
-              hint: t('downloadPngHint'),
-              onClick: downloadImage,
-            })) : null,
-            state.toast === null ? null : h('div', {
-              className: 'cim-toast',
-              'data-tone': state.toast.tone,
-              role: 'status',
-              'aria-live': 'polite',
-            }, state.toast.text));
+          const resetLater = (delay) => {
+            if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+            timerRef.current = window.setTimeout(() => {
+              timerRef.current = null;
+              setState('idle');
+            }, delay);
+          };
+
+          const onClick = async () => {
+            if (state === 'rendering') return;
+            setState('rendering');
+            try {
+              const tail = buttonRef.current?.closest('[data-turn-tail]') ?? null;
+              if (tail === null) throw new Error('turn tail not found');
+              const blob = await renderMessagePng(tail);
+              downloadBlob(blob);
+              setState('done');
+              resetLater(1400);
+            } catch (error) {
+              console.error('copy-image-menu: download render failed', error);
+              setState('error');
+              resetLater(2400);
+            }
+          };
+
+          const label = state === 'rendering'
+            ? t('rendering')
+            : state === 'done'
+              ? t('downloadStarted')
+              : state === 'error'
+                ? t('downloadFailed')
+                : t('downloadImage');
+
+          return h('button', {
+            ref: buttonRef,
+            type: 'button',
+            className: 'cim-download',
+            'data-state': state,
+            'aria-label': label,
+            title: label,
+            disabled: state === 'rendering',
+            onClick,
+          },
+          state === 'rendering'
+            ? h('span', { className: 'cim-spinner', 'aria-hidden': true })
+            : state === 'done'
+              ? ICONS.check()
+              : state === 'error'
+                ? ICONS.alert()
+                : ICONS.download());
         }
 
-        ctx.slots.inject('shell.overlay', () => ctx.slots.register({
-          name: 'shell.overlay',
-          id: 'copy-image-menu.overlay',
-          order: 1000,
+        ctx.slots.inject('conversation.chat.assistant-actions', () => ctx.slots.register({
+          name: 'conversation.chat.assistant-actions',
+          id: 'download-image',
+          order: 5,
           locale: NS,
-        }, CopyOverlay));
+        }, DownloadAction));
       },
     };
   },
