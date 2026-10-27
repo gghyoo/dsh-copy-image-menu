@@ -45,10 +45,6 @@ window.__ModuleLoader__.load({
         outline: 1px solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
         outline-offset: 1px;
       }
-      .cim-download:disabled {
-        cursor: default;
-        opacity: .7;
-      }
       .cim-download[data-state="done"] { color: var(--dsw-alias-state-success-primary); }
       .cim-download[data-state="error"] { color: var(--dsw-alias-state-error-primary); }
       .cim-spinner {
@@ -64,6 +60,34 @@ window.__ModuleLoader__.load({
       }
       @media (prefers-reduced-motion: reduce) {
         .cim-spinner { animation-duration: 2.4s; }
+      }
+      .cim-tooltip {
+        position: fixed;
+        z-index: 100;
+        width: max-content;
+        max-width: 50vw;
+        padding: 3px 7px;
+        border-radius: var(--dsw-radius-sm);
+        background: var(--dsw-alias-tooltip-bg);
+        color: var(--dsw-static-neutral-bluish-00);
+        font-size: 13px;
+        line-height: 20px;
+        white-space: pre-line;
+        overflow-wrap: break-word;
+        pointer-events: none;
+        animation: cim-tooltip-in .15s var(--ds-ease-in-out);
+      }
+      .cim-tooltip[data-side="right"] { transform: translateY(-50%); }
+      .cim-tooltip[data-side="bottom"] { transform: translateX(-50%); }
+      .cim-tooltip[data-side="top"] { transform: translate(-50%, -100%); }
+      .cim-tooltip[data-side="bottom"][data-align="end"] { transform: translateX(-100%); }
+      .cim-tooltip[data-side="top"][data-align="end"] { transform: translate(-100%, -100%); }
+      .cim-download[aria-disabled="true"] {
+        cursor: default;
+        opacity: .7;
+      }
+      @keyframes cim-tooltip-in {
+        0% { opacity: 0; }
       }
     `;
 
@@ -391,8 +415,12 @@ window.__ModuleLoader__.load({
         function DownloadAction(props) {
           const t = props.t ?? translate;
           const [state, setState] = React.useState('idle');
+          const [anchor, setAnchor] = React.useState(null);
           const buttonRef = React.useRef(null);
+          const tooltipRef = React.useRef(null);
           const timerRef = React.useRef(null);
+          const hoverRef = React.useRef(false);
+          const focusRef = React.useRef(false);
 
           React.useEffect(() => () => {
             if (timerRef.current !== null) window.clearTimeout(timerRef.current);
@@ -406,7 +434,66 @@ window.__ModuleLoader__.load({
             }, delay);
           };
 
+          const label = state === 'rendering'
+            ? t('rendering')
+            : state === 'done'
+              ? t('downloadStarted')
+              : state === 'error'
+                ? t('downloadFailed')
+                : t('downloadImage');
+
+          const anchorFromButton = React.useCallback(() => {
+            const button = buttonRef.current;
+            if (button === null) return;
+            const rect = button.getBoundingClientRect();
+            setAnchor({
+              x: rect.left + rect.width / 2,
+              right: rect.right,
+              top: rect.top,
+              bottom: rect.bottom,
+            });
+          }, []);
+
+          const hideTooltip = React.useCallback(() => setAnchor(null), []);
+
+          React.useLayoutEffect(() => {
+            if (anchor === null) return;
+            const bubble = tooltipRef.current;
+            if (bubble === null) return;
+            const rect = bubble.getBoundingClientRect();
+            const pad = 12;
+            const gap = 8;
+            let side = 'bottom';
+            let top = anchor.bottom + gap;
+            const fitsBottom = top + rect.height <= window.innerHeight - pad;
+            const fitsTop = anchor.top - gap - rect.height >= pad;
+            if (!fitsBottom && fitsTop) {
+              side = 'top';
+              top = anchor.top - gap;
+            }
+            const align = 'center';
+            const left = Math.max(pad, Math.min(anchor.x - rect.width / 2, window.innerWidth - pad - rect.width)) + rect.width / 2;
+            bubble.style.left = `${left}px`;
+            bubble.style.top = `${top}px`;
+            bubble.dataset.side = side;
+            bubble.dataset.align = align;
+            bubble.style.visibility = 'visible';
+          }, [anchor, label]);
+
+          React.useEffect(() => {
+            if (anchor === null) return undefined;
+            const onResize = () => anchorFromButton();
+            const onScroll = () => hideTooltip();
+            window.addEventListener('resize', onResize);
+            window.addEventListener('scroll', onScroll, true);
+            return () => {
+              window.removeEventListener('resize', onResize);
+              window.removeEventListener('scroll', onScroll, true);
+            };
+          }, [anchor, anchorFromButton, hideTooltip]);
+
           const onClick = async () => {
+            hideTooltip();
             if (state === 'rendering') return;
             if (timerRef.current !== null) {
               window.clearTimeout(timerRef.current);
@@ -427,31 +514,52 @@ window.__ModuleLoader__.load({
             }
           };
 
-          const label = state === 'rendering'
-            ? t('rendering')
-            : state === 'done'
-              ? t('downloadStarted')
-              : state === 'error'
-                ? t('downloadFailed')
-                : t('downloadImage');
+          const onMouseEnter = () => {
+            hoverRef.current = true;
+            anchorFromButton();
+          };
+          const onMouseLeave = () => {
+            hoverRef.current = false;
+            if (!focusRef.current) hideTooltip();
+          };
+          const onFocus = () => {
+            focusRef.current = true;
+            anchorFromButton();
+          };
+          const onBlur = () => {
+            focusRef.current = false;
+            if (!hoverRef.current) hideTooltip();
+          };
 
-          return h('button', {
-            ref: buttonRef,
-            type: 'button',
-            className: 'cim-download',
-            'data-state': state,
-            'aria-label': label,
-            title: label,
-            disabled: state === 'rendering',
-            onClick,
-          },
-          state === 'rendering'
-            ? h('span', { className: 'cim-spinner', 'aria-hidden': true })
-            : state === 'done'
-              ? ICONS.check()
-              : state === 'error'
-                ? ICONS.alert()
-                : ICONS.download());
+          return h(React.Fragment, null,
+            h('button', {
+              ref: buttonRef,
+              type: 'button',
+              className: 'cim-download',
+              'data-state': state,
+              'aria-label': label,
+              'aria-disabled': state === 'rendering' || undefined,
+              onMouseEnter,
+              onMouseLeave,
+              onFocus,
+              onBlur,
+              onClick,
+            },
+            state === 'rendering'
+              ? h('span', { className: 'cim-spinner', 'aria-hidden': true })
+              : state === 'done'
+                ? ICONS.check()
+                : state === 'error'
+                  ? ICONS.alert()
+                  : ICONS.download()),
+            anchor === null ? null : h('span', {
+              ref: tooltipRef,
+              className: 'cim-tooltip',
+              role: 'tooltip',
+              'data-side': 'bottom',
+              'data-align': 'center',
+              style: { left: `${anchor.x}px`, top: `${anchor.bottom + 8}px`, visibility: 'hidden' },
+            }, label));
         }
 
         ctx.slots.inject('conversation.chat.assistant-actions', () => ctx.slots.register({
