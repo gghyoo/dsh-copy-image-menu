@@ -1,5 +1,5 @@
 {
-  "name": "@local/dsh-copy-image-menu",
+  "name": "dsh-download-image",
   "version": "1.0.0",
   "description": "Adds a Download PNG button next to the assistant message copy button.",
   "type": "module",
@@ -35,11 +35,11 @@
   "author": "gghyoo",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gghyoo/dsh-copy-image-menu.git"
+    "url": "git+https://github.com/gghyoo/dsh-download-image.git"
   },
-  "homepage": "https://github.com/gghyoo/dsh-copy-image-menu#readme",
+  "homepage": "https://github.com/gghyoo/dsh-download-image#readme",
   "bugs": {
-    "url": "https://github.com/gghyoo/dsh-copy-image-menu/issues"
+    "url": "https://github.com/gghyoo/dsh-download-image/issues"
   },
   "keywords": [
     "dsh",

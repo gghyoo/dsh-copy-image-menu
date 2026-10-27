@@ -1,4 +1,4 @@
-# DSH Copy Image Menu
+# DSH Download Image
 
 在 DeepSeek Harness Web UI 的助手消息复制按钮旁，增加一个 **下载 PNG** 图标按钮。
 
@@ -49,23 +49,23 @@
 ### 从 GitHub 安装
 
 ```bash
-dsh plugin add "github:gghyoo/dsh-copy-image-menu"
+dsh plugin add "github:gghyoo/dsh-download-image"
 ```
 
-安装完成后刷新 Web UI。如果按钮没有出现，打开 **Settings → Plugins**，确认 `@local/dsh-copy-image-menu` 已启用，然后硬刷新页面。
+安装完成后刷新 Web UI。如果按钮没有出现，打开 **Settings → Plugins**，确认 `dsh-download-image` 已启用，然后硬刷新页面。
 
 ### 从本地目录安装
 
 ```bash
-git clone https://github.com/gghyoo/dsh-copy-image-menu.git
-cd dsh-copy-image-menu
+git clone https://github.com/gghyoo/dsh-download-image.git
+cd dsh-download-image
 dsh plugin add "$PWD"
 ```
 
 ### 更新
 
 ```bash
-dsh plugin add "github:gghyoo/dsh-copy-image-menu"
+dsh plugin add "github:gghyoo/dsh-download-image"
 ```
 
 或者重新拉取本地目录后刷新页面。插件是纯 JavaScript，没有构建步骤。
@@ -73,7 +73,7 @@ dsh plugin add "github:gghyoo/dsh-copy-image-menu"
 ### 卸载
 
 ```bash
-dsh plugin remove "@local/dsh-copy-image-menu"
+dsh plugin remove "dsh-download-image"
 ```
 
 安装或卸载后，建议刷新浏览器页面；如果 DSH 提示需要重启，按提示重启。
@@ -267,13 +267,13 @@ dsh plugin add "$PWD"
 生成失败时，浏览器控制台会输出：
 
 ```text
-copy-image-menu: download render failed ...
+dsh-download-image: download render failed ...
 ```
 
 如果样式渲染失败并走了纯文本兜底，会输出：
 
 ```text
-copy-image-menu: styled render failed, using text fallback ...
+dsh-download-image: styled render failed, using text fallback ...
 ```
 
 ---
@@ -291,7 +291,7 @@ copy-image-menu: styled render failed, using text fallback ...
 
 ### 下载按钮没有出现？
 
-1. 确认插件已启用：**Settings → Plugins → @local/dsh-copy-image-menu**。
+1. 确认插件已启用：**Settings → Plugins → dsh-download-image**。
 2. 硬刷新页面。
 3. 确认消息是已完成的助手消息；按钮在 hover 操作行里。
 4. 查看浏览器控制台是否有插件加载错误。
@@ -316,14 +316,14 @@ copy-image-menu: styled render failed, using text fallback ...
 
 ## English Summary
 
-DSH Copy Image Menu adds a **Download PNG** icon button next to the native assistant message copy button in the DeepSeek Harness Web UI. The native copy button is left untouched and still copies Markdown.
+DSH Download Image adds a **Download PNG** icon button next to the native assistant message copy button in the DeepSeek Harness Web UI. The native copy button is left untouched and still copies Markdown.
 
 On click, the plugin clones the final assistant message, inlines its computed styles, expands the canvas for horizontal overflow, serializes it through SVG `foreignObject` and a base64 data URL, and exports a PNG through Canvas. The plugin has no server-side logic and uploads nothing.
 
 Install:
 
 ```bash
-dsh plugin add "github:gghyoo/dsh-copy-image-menu"
+dsh plugin add "github:gghyoo/dsh-download-image"
 ```
 
 ---

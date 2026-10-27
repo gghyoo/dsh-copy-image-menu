@@ -1,9 +1,9 @@
 window.__ModuleLoader__.load({
-  id: '@local/dsh-copy-image-menu',
+  id: 'dsh-download-image',
   factory(require) {
     const React = require('react');
     const h = React.createElement;
-    const NS = 'copy-image-menu';
+    const NS = 'download-image';
 
     const zh = {
       downloadImage: '下载 PNG',
@@ -20,7 +20,7 @@ window.__ModuleLoader__.load({
     };
 
     const CSS = `
-      .cim-download {
+      .ddi-download {
         width: calc(28px + var(--dsh-content-font-delta, 0px));
         height: calc(28px + var(--dsh-content-font-delta, 0px));
         border-radius: var(--dsw-radius-sm);
@@ -33,35 +33,35 @@ window.__ModuleLoader__.load({
         padding: 6px;
         display: inline-flex;
       }
-      .cim-download svg {
+      .ddi-download svg {
         width: calc(17px + var(--dsh-content-font-delta, 0px));
         height: calc(17px + var(--dsh-content-font-delta, 0px));
       }
-      .cim-download:hover {
+      .ddi-download:hover {
         background: var(--dsw-alias-interactive-bg-hover);
         color: var(--dsw-alias-label-secondary);
       }
-      .cim-download:focus-visible {
+      .ddi-download:focus-visible {
         outline: 1px solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
         outline-offset: 1px;
       }
-      .cim-download[data-state="done"] { color: var(--dsw-alias-state-success-primary); }
-      .cim-download[data-state="error"] { color: var(--dsw-alias-state-error-primary); }
-      .cim-spinner {
+      .ddi-download[data-state="done"] { color: var(--dsw-alias-state-success-primary); }
+      .ddi-download[data-state="error"] { color: var(--dsw-alias-state-error-primary); }
+      .ddi-spinner {
         width: 16px;
         height: 16px;
         border: 2px solid currentColor;
         border-right-color: transparent;
         border-radius: 50%;
-        animation: cim-spin .8s linear infinite;
+        animation: ddi-spin .8s linear infinite;
       }
-      @keyframes cim-spin {
+      @keyframes ddi-spin {
         to { transform: rotate(360deg); }
       }
       @media (prefers-reduced-motion: reduce) {
-        .cim-spinner { animation-duration: 2.4s; }
+        .ddi-spinner { animation-duration: 2.4s; }
       }
-      .cim-tooltip {
+      .ddi-tooltip {
         position: fixed;
         z-index: 100;
         width: max-content;
@@ -75,18 +75,18 @@ window.__ModuleLoader__.load({
         white-space: pre-line;
         overflow-wrap: break-word;
         pointer-events: none;
-        animation: cim-tooltip-in .15s var(--ds-ease-in-out);
+        animation: ddi-tooltip-in .15s var(--ds-ease-in-out);
       }
-      .cim-tooltip[data-side="right"] { transform: translateY(-50%); }
-      .cim-tooltip[data-side="bottom"] { transform: translateX(-50%); }
-      .cim-tooltip[data-side="top"] { transform: translate(-50%, -100%); }
-      .cim-tooltip[data-side="bottom"][data-align="end"] { transform: translateX(-100%); }
-      .cim-tooltip[data-side="top"][data-align="end"] { transform: translate(-100%, -100%); }
-      .cim-download[aria-disabled="true"] {
+      .ddi-tooltip[data-side="right"] { transform: translateY(-50%); }
+      .ddi-tooltip[data-side="bottom"] { transform: translateX(-50%); }
+      .ddi-tooltip[data-side="top"] { transform: translate(-50%, -100%); }
+      .ddi-tooltip[data-side="bottom"][data-align="end"] { transform: translateX(-100%); }
+      .ddi-tooltip[data-side="top"][data-align="end"] { transform: translate(-100%, -100%); }
+      .ddi-download[aria-disabled="true"] {
         cursor: default;
         opacity: .7;
       }
-      @keyframes cim-tooltip-in {
+      @keyframes ddi-tooltip-in {
         0% { opacity: 0; }
       }
     `;
@@ -379,7 +379,7 @@ window.__ModuleLoader__.load({
           context.drawImage(image, 0, 0, width, height);
           return await canvasToBlob(canvas);
         } catch (error) {
-          console.warn('copy-image-menu: styled render failed, using text fallback', error);
+          console.warn('dsh-download-image: styled render failed, using text fallback', error);
           return await renderPlainTextPng(target);
         }
       } finally {
@@ -402,14 +402,14 @@ window.__ModuleLoader__.load({
     return {
       inject: ['slots', 'locale'],
       apply(ctx) {
-        ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'copy-image-menu: dictionaries');
+        ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-download-image: dictionaries');
         ctx.effect(() => {
           const style = document.createElement('style');
-          style.dataset.plugin = '@local/dsh-copy-image-menu';
+          style.dataset.plugin = 'dsh-download-image';
           style.textContent = CSS;
           document.head.appendChild(style);
           return () => style.remove();
-        }, 'copy-image-menu: styles');
+        }, 'dsh-download-image: styles');
         const translate = ctx.locale.bind(NS);
 
         function DownloadAction(props) {
@@ -508,7 +508,7 @@ window.__ModuleLoader__.load({
               setState('done');
               resetLater(1400);
             } catch (error) {
-              console.error('copy-image-menu: download render failed', error);
+              console.error('dsh-download-image: download render failed', error);
               setState('error');
               resetLater(2400);
             }
@@ -535,7 +535,7 @@ window.__ModuleLoader__.load({
             h('button', {
               ref: buttonRef,
               type: 'button',
-              className: 'cim-download',
+              className: 'ddi-download',
               'data-state': state,
               'aria-label': label,
               'aria-disabled': state === 'rendering' || undefined,
@@ -546,7 +546,7 @@ window.__ModuleLoader__.load({
               onClick,
             },
             state === 'rendering'
-              ? h('span', { className: 'cim-spinner', 'aria-hidden': true })
+              ? h('span', { className: 'ddi-spinner', 'aria-hidden': true })
               : state === 'done'
                 ? ICONS.check()
                 : state === 'error'
@@ -554,7 +554,7 @@ window.__ModuleLoader__.load({
                   : ICONS.download()),
             anchor === null ? null : h('span', {
               ref: tooltipRef,
-              className: 'cim-tooltip',
+              className: 'ddi-tooltip',
               role: 'tooltip',
               'data-side': 'bottom',
               'data-align': 'center',
